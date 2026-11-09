@@ -1,0 +1,142 @@
+[
+  {
+    "name": "01_rsi_extreme_pure",
+    "mechanism": "Baseline for the whole family. The feature screen found RSI's rank IC negative, meaning mean reversion. If that is real at all it should be strongest where RSI is stretched, since a correlation measured across every bar averages in thousands of bars where RSI sits near 50 and says nothing. Trading only the extremes concentrates whatever signal exists and pays spread far fewer times.",
+    "features": [{"fn": "rsi", "n": 14}],
+    "long": [{"left": "RSI", "op": "<", "right": 25}],
+    "short": [{"left": "RSI", "op": ">", "right": 75}]
+  },
+  {
+    "name": "02_rsi_extreme_tight",
+    "mechanism": "Same hypothesis as 01 but pushed further out. If mean reversion strengthens monotonically with how stretched price is, the tighter threshold should show a larger per-trade edge even though it fires far less often. If 02 is no better than 01, the extremes are not special and the whole mean-reversion story is weaker than the correlation suggested.",
+    "features": [{"fn": "rsi", "n": 14}],
+    "long": [{"left": "RSI", "op": "<", "right": 15}],
+    "short": [{"left": "RSI", "op": ">", "right": 85}]
+  },
+  {
+    "name": "03_sto_rsi_extreme",
+    "mechanism": "Stochastic RSI normalizes RSI against its own recent range, so it reaches extremes more often and in a wider variety of market states than raw RSI. Tests whether the mean-reversion effect is about the absolute RSI level or about RSI being extreme relative to its own recent behaviour.",
+    "features": [{"fn": "sto_rsi", "n": 14}],
+    "long": [{"left": "STO_RSI", "op": "<", "right": 10}],
+    "short": [{"left": "STO_RSI", "op": ">", "right": 90}]
+  },
+  {
+    "name": "04_rsi_dip_in_uptrend",
+    "mechanism": "Pure mean reversion buys every dip, including dips that are the start of a real trend, which is how this family gets run over. A slow trend filter restricts reversion trades to the direction the market is already going, so a losing trade is one that goes against the prevailing drift rather than against a fresh trend.",
+    "features": [{"fn": "rsi", "n": 14}, {"fn": "sma", "n": 200}],
+    "long": [{"left": "RSI", "op": "<", "right": 30}, {"left": "close", "op": ">", "right": "SMA_200"}],
+    "short": [{"left": "RSI", "op": ">", "right": 70}, {"left": "close", "op": "<", "right": "SMA_200"}]
+  },
+  {
+    "name": "05_rsi_dip_slow_trend",
+    "mechanism": "Identical to 04 with a much slower trend filter. A 200-bar SMA on 15M bars is about two days, which may be too fast to represent trend and may just be another momentum measure correlated with RSI. A 500-bar filter is about a week and is far less likely to be the same series as the entry signal.",
+    "features": [{"fn": "rsi", "n": 14}, {"fn": "sma", "n": 500}],
+    "long": [{"left": "RSI", "op": "<", "right": 30}, {"left": "close", "op": ">", "right": "SMA_500"}],
+    "short": [{"left": "RSI", "op": ">", "right": 70}, {"left": "close", "op": "<", "right": "SMA_500"}]
+  },
+  {
+    "name": "06_sma_cross_trend",
+    "mechanism": "Deliberately the opposite hypothesis to the whole RSI family. The screen found a mean-reverting sign, so a trend-following rule should lose if that sign is real. Included as a direction control: if both the reversion rules and this one make money, something is wrong with the backtest rather than right with the strategies.",
+    "features": [{"fn": "sma", "n": 20}, {"fn": "sma", "n": 100}],
+    "long": [{"left": "SMA_20", "op": "cross_above", "right": "SMA_100"}],
+    "short": [{"left": "SMA_20", "op": "cross_below", "right": "SMA_100"}]
+  },
+  {
+    "name": "07_sma_diff_momentum",
+    "mechanism": "Trend following expressed as the gap between two averages widening rather than as a single crossing event. Crossings are rare and arbitrary in timing; a widening gap persists, so this fires far more often. Tests whether trend information lives in the crossing moment or in the state.",
+    "features": [{"fn": "sma_diff", "n": 20, "m": 100}],
+    "long": [{"left": "SMA_diff", "op": ">", "right": 0}, {"left": "SMA_diff", "op": ">", "right": "SMA_diff@1"}],
+    "short": [{"left": "SMA_diff", "op": "<", "right": 0}, {"left": "SMA_diff", "op": "<", "right": "SMA_diff@1"}]
+  },
+  {
+    "name": "08_rsi_sma_divergence_control",
+    "mechanism": "The repo's existing RsiSma rule written as a spec. This is a correctness control, not a hypothesis: if the generic engine reproduces the hardcoded strategy's results on the same data, the engine is trustworthy. Any large discrepancy means a bug in the spec interpreter and everything else here is suspect.",
+    "features": [{"fn": "sma", "n": 72}, {"fn": "sma", "n": 120}, {"fn": "rsi", "n": 25}],
+    "long": [{"left": "SMA_72", "op": "<", "right": "SMA_120"}, {"left": "RSI", "op": ">", "right": "RSI@1"}],
+    "short": [{"left": "SMA_72", "op": ">", "right": "SMA_120"}, {"left": "RSI", "op": "<", "right": "RSI@1"}]
+  },
+  {
+    "name": "09_envelope_reversion",
+    "mechanism": "Measures stretch as distance from an EMA band rather than through an oscillator. This is the same quantity the feature screen called price-to-level normalization, applied to the high and low EMAs separately. If the reversion effect is about distance from fair value, this should capture it more directly than RSI, which compresses magnitude into a bounded 0 to 100 scale and loses how far price actually moved.",
+    "features": [{"fn": "k_enveloppe", "n": 20}],
+    "long": [{"left": "pivots_low", "op": "<", "right": -0.0015}],
+    "short": [{"left": "pivots_high", "op": ">", "right": 0.0015}]
+  },
+  {
+    "name": "10_envelope_reversion_trend",
+    "mechanism": "Candidate 09 with the trend filter from 04. If 09 works and 10 works better, the filter is adding something. If 10 is worse, the filter is removing good trades rather than bad ones, which would argue the reversion effect is strongest precisely when it fights the prevailing direction.",
+    "features": [{"fn": "k_enveloppe", "n": 20}, {"fn": "sma", "n": 500}],
+    "long": [{"left": "pivots_low", "op": "<", "right": -0.0015}, {"left": "close", "op": ">", "right": "SMA_500"}],
+    "short": [{"left": "pivots_high", "op": ">", "right": 0.0015}, {"left": "close", "op": "<", "right": "SMA_500"}]
+  },
+  {
+    "name": "11_rsi_extreme_calm",
+    "mechanism": "Volatility conditioning. In calm markets price moves inside a range and overextensions tend to unwind; in volatile markets the same overextension can be the start of a real repricing. Hypothesis: reversion works when volatility is below its own recent normal. ATR is z-scored so the threshold means the same thing in 2017 and in 2022.",
+    "features": [{"fn": "rsi", "n": 14}, {"fn": "atr", "n": 14}, {"fn": "roll_z", "col": "ATR", "n": 200}],
+    "long": [{"left": "RSI", "op": "<", "right": 25}, {"left": "RZ_ATR_200", "op": "<", "right": -0.5}],
+    "short": [{"left": "RSI", "op": ">", "right": 75}, {"left": "RZ_ATR_200", "op": ">", "right": -0.5}]
+  },
+  {
+    "name": "12_rsi_extreme_volatile",
+    "mechanism": "The direct opposite of 11, included so the volatility question gets a fair test rather than a one-sided one. Hypothesis: volatile periods produce larger overextensions, and a larger overextension has more room to revert and more edge relative to a fixed spread. One of 11 and 12 should clearly beat the other, and if neither does, volatility is not the conditioner.",
+    "features": [{"fn": "rsi", "n": 14}, {"fn": "atr", "n": 14}, {"fn": "roll_z", "col": "ATR", "n": 200}],
+    "long": [{"left": "RSI", "op": "<", "right": 25}, {"left": "RZ_ATR_200", "op": ">", "right": 0.5}],
+    "short": [{"left": "RSI", "op": ">", "right": 75}, {"left": "RZ_ATR_200", "op": ">", "right": 0.5}]
+  },
+  {
+    "name": "13_exhaustion_candle",
+    "mechanism": "Candle structure instead of an indicator. A bar with a large range that closes most of the way through it, in the direction of an already-stretched move, is the shape of a final push by the last participants willing to trade at that price. Uses amplitude for size and filling for decisiveness, both of which are independent of the momentum family.",
+    "features": [{"fn": "rsi", "n": 14}, {"fn": "candle_information"}, {"fn": "roll_z", "col": "amplitude", "n": 200}],
+    "long": [{"left": "RSI", "op": "<", "right": 30}, {"left": "candle_way", "op": "<", "right": 0}, {"left": "filling", "op": ">", "right": 0.6}, {"left": "RZ_amplitude_200", "op": ">", "right": 1.0}],
+    "short": [{"left": "RSI", "op": ">", "right": 70}, {"left": "candle_way", "op": ">", "right": 0}, {"left": "filling", "op": ">", "right": 0.6}, {"left": "RZ_amplitude_200", "op": ">", "right": 1.0}]
+  },
+  {
+    "name": "14_indecision_candle_reversion",
+    "mechanism": "The structural opposite of 13. A bar with a wide range but a close near its open means buyers and sellers fought to a draw, which is a different market state from a decisive push. Hypothesis: indecision after a stretched move marks the point where the move stops rather than the point where it accelerates.",
+    "features": [{"fn": "rsi", "n": 14}, {"fn": "candle_information"}, {"fn": "roll_z", "col": "amplitude", "n": 200}],
+    "long": [{"left": "RSI", "op": "<", "right": 35}, {"left": "filling", "op": "<", "right": 0.35}, {"left": "RZ_amplitude_200", "op": ">", "right": 0.0}],
+    "short": [{"left": "RSI", "op": ">", "right": 65}, {"left": "filling", "op": "<", "right": 0.35}, {"left": "RZ_amplitude_200", "op": ">", "right": 0.0}]
+  },
+  {
+    "name": "15_volume_spike_reversion",
+    "mechanism": "This dataset has real_volume populated, which the H1 data did not, so volume is genuinely testable here for the first time. Hypothesis: an overextension on unusually heavy volume is a capitulation rather than a drift, and capitulations revert. Volume is z-scored because raw volume trends across a decade and an absolute threshold would silently become a date filter.",
+    "features": [{"fn": "rsi", "n": 14}, {"fn": "roll_z", "col": "real_volume", "n": 200}],
+    "long": [{"left": "RSI", "op": "<", "right": 35}, {"left": "RZ_real_volume_200", "op": ">", "right": 0.75}],
+    "short": [{"left": "RSI", "op": ">", "right": 65}, {"left": "RZ_real_volume_200", "op": ">", "right": 0.75}]
+  },
+  {
+    "name": "16_volume_dry_reversion",
+    "mechanism": "Opposite of 15, included for the same reason 12 exists. Hypothesis: a move on thin volume is not supported by real participation and gives back more readily than a move that heavy volume agreed with. Thin-volume reversion is also cheaper to be wrong about, since those periods tend to be quieter.",
+    "features": [{"fn": "rsi", "n": 14}, {"fn": "roll_z", "col": "real_volume", "n": 200}],
+    "long": [{"left": "RSI", "op": "<", "right": 35}, {"left": "RZ_real_volume_200", "op": "<", "right": -0.25}],
+    "short": [{"left": "RSI", "op": ">", "right": 65}, {"left": "RZ_real_volume_200", "op": "<", "right": -0.25}]
+  },
+  {
+    "name": "17_ichimoku_cloud_position",
+    "mechanism": "Ichimoku builds its cloud from midpoints of high-low ranges over several lookbacks, so it is constructed differently from a close-based moving average and is less likely to be the same series as the SMA family. Tests whether price sitting outside the cloud carries trend information the SMAs did not.",
+    "features": [{"fn": "ichimoku", "n1": 9, "n2": 26}],
+    "long": [{"left": "close", "op": ">", "right": "SPAN_A"}, {"left": "close", "op": ">", "right": "SPAN_B"}],
+    "short": [{"left": "close", "op": "<", "right": "SPAN_A"}, {"left": "close", "op": "<", "right": "SPAN_B"}]
+  },
+  {
+    "name": "18_ichimoku_conversion_cross",
+    "mechanism": "The faster Ichimoku signal, a conversion line crossing the base line, which is the system's own entry trigger rather than a regime description. Separates whether any Ichimoku value is in where price sits relative to the cloud, as in 17, or in the crossing event.",
+    "features": [{"fn": "ichimoku", "n1": 9, "n2": 26}],
+    "long": [{"left": "CONVERSION", "op": "cross_above", "right": "BASE"}],
+    "short": [{"left": "CONVERSION", "op": "cross_below", "right": "BASE"}]
+  },
+  {
+    "name": "19_sto_rsi_k_d_cross_oversold",
+    "mechanism": "A turn signal rather than a level signal. Being oversold says nothing about when the reversion starts, and candidates 01 to 03 enter while price may still be falling. Requiring the fast stochastic line to cross its own slower line waits for evidence the move has actually turned, at the cost of entering later and giving up part of the move.",
+    "features": [{"fn": "sto_rsi", "n": 14}],
+    "long": [{"left": "STO_RSI_K", "op": "cross_above", "right": "STO_RSI_D"}, {"left": "STO_RSI", "op": "<", "right": 30}],
+    "short": [{"left": "STO_RSI_K", "op": "cross_below", "right": "STO_RSI_D"}, {"left": "STO_RSI", "op": ">", "right": 70}]
+  },
+  {
+    "name": "20_return_reversion_raw",
+    "mechanism": "Reversion measured straight from returns with no indicator in between, as the simplest possible version of the hypothesis. If this works about as well as the RSI candidates, the indicators are adding nothing over the raw price change and the project should prefer the simpler rule. NOTE: previous_ret in DataPreprocessing is computed as (price n bars ago minus price now) / price now, so it is SIGN FLIPPED relative to a normal return. A POSITIVE previous_ret means price has FALLEN, which is why the long condition below uses the positive side.",
+    "features": [{"fn": "previous_ret", "n": 20}, {"fn": "roll_z", "col": "previous_ret", "n": 200}],
+    "long": [{"left": "RZ_previous_ret_200", "op": ">", "right": 1.5}],
+    "short": [{"left": "RZ_previous_ret_200", "op": "<", "right": -1.5}]
+  }
+]
