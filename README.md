@@ -1,5 +1,7 @@
 # Systematic FX Trading Research: Testing Whether Simple Rules Beat Noise
 
+**Timeline:** August 2026 to present
+
 Research on EUR/USD trading rules from a six-person graduate team project in NC State's Master of Financial Mathematics program (Fall 2026). This repository documents **my own contributions** to that project: the feature screening, the VWAP analysis, and the Ichimoku TK cross research, which came out of a pre-registered search across 20 trading rules tested against a Monte Carlo noise benchmark.
 
 **Headline finding:** the best rule out of 20 returned +22% out of sample, but it performed *worse* than the best of 20 random strategies would be expected to perform. On EUR/USD at realistic costs, structureless noise turns a profit about half the time, so a profitable backtest on its own proves very little.
@@ -79,7 +81,7 @@ An initial long vs. short split showed both sides profitable with balanced trade
 
 **The Expert Advisor** implements the rule natively in MQL5, so it runs inside MetaTrader 5 without Python. It was run on a demo account only, as a test of the execution logic, not as a strategy expected to make money.
 
-## Results
+## Overall results
 
 | | |
 |---|---|
