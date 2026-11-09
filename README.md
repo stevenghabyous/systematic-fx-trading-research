@@ -1,6 +1,6 @@
 # Systematic FX Trading Research: Testing Whether Simple Rules Beat Noise
 
-Research on EUR/USD trading rules from a six-person graduate team project in NC State's Master of Financial Mathematics program (Fall 2026). This repository documents **my contributions**: feature screening, a VWAP analysis, and a pre-registered search across 20 trading rules tested against a Monte Carlo noise benchmark.
+Research on EUR/USD trading rules from a six-person graduate team project in NC State's Master of Financial Mathematics program (Fall 2026). This repository documents **my own contributions** to that project: the feature screening, the VWAP analysis, and the Ichimoku TK cross research, which came out of a pre-registered search across 20 trading rules tested against a Monte Carlo noise benchmark.
 
 **Headline finding:** the best rule out of 20 returned +22% out of sample, but it performed *worse* than the best of 20 random strategies would be expected to perform. On EUR/USD at realistic costs, structureless noise turns a profit about half the time, so a profitable backtest on its own proves very little.
 
@@ -44,11 +44,46 @@ For the top three rules and the control, I compared the real result with the sam
 
 The right comparison point matters here. When you pick the best of 20 rules, chance alone puts that best one around the **95th percentile** of the noise distribution (20/21). A real edge has to clear that bar.
 
+## 5. The Ichimoku TK cross in detail (`strategy/SG_IchimokuCross.mq5`)
+
+The TK cross was the strongest of the 20 rules, so I took it further: a full performance breakdown, the per-window results, a long vs. short split, a check at a second timeframe, and a working MetaTrader 5 Expert Advisor.
+
+**The rule**
+
+```
+Timeframe:  EUR/USD, 4-hour bars
+Long:       Tenkan-sen (9) crosses above Kijun-sen (26) on a closed bar
+Short:      Tenkan-sen crosses below Kijun-sen
+Entry:      open of the next bar
+Exit:       take profit (about +110 pips) or stop loss (about -92 pips) only
+Cost:       1 pip per round trip
+```
+
+Both lines are midpoints of the high-low range (about 36 hours and 4 days), so a cross means the recent trading range has shifted relative to the longer one.
+
+**Out-of-sample performance (10 walk-forward windows, about 7.5 years)**
+
+| | |
+|---|---|
+| Total return | +22.0% (unlevered) |
+| Windows positive | 8 of 10 |
+| Trades | 164 (about 28 per year) |
+| Win rate | 61% |
+| Average win / loss | +90.0 / -106.2 pips |
+| Expectancy | +13.4 pips per trade |
+| Breakeven win rate | 54.1% |
+
+An initial long vs. short split showed both sides profitable with balanced trade counts (81 longs, 83 shorts), which argues against the rule simply riding the euro's decline. That split still needs a second check before relying on it.
+
+**Why it is not an edge:** the cushion over breakeven is about 7 winning trades per 100, which is well inside what chance produces. It sat at the 79th percentile of noise, against roughly the 95th expected for the best of 20 rules. Most of its return came from one window, its most recent window was its worst (-7.51% over 43 trades at a 37% win rate), and the same rule ranked 14th of 20 on 15-minute bars.
+
+**The Expert Advisor** implements the rule natively in MQL5, so it runs inside MetaTrader 5 without Python. It was run on a demo account only, as a test of the execution logic, not as a strategy expected to make money.
+
 ## Results
 
 | | |
 |---|---|
-| Best rule | Ichimoku Tenkan-Kijun ("TK") cross on 4-hour bars |
+| Best rule | Ichimoku Tenkan-Kijun ("TK") cross on 4-hour bars, which I then analyzed in depth (per-window returns, long vs. short split, timeframe check) |
 | Out-of-sample return | +22.0% over about 7.5 years, 164 trades, 61% winners |
 | Position in noise distribution | **79th percentile** (best of 20 by chance alone: about 95th) |
 | Same rule on 15-minute bars | Ranked 14th of 20 |
@@ -88,6 +123,8 @@ notebooks/
   vwap_analysis.ipynb           VWAP vs. placebo level test
 hypotheses/
   candidates.json               the 20 pre-registered rules, each with its stated mechanism
+strategy/
+  SG_IchimokuCross.mq5          the TK cross as a MetaTrader 5 Expert Advisor (demo use only)
 ```
 
 **Tools:** Python, pandas, NumPy, SciPy, ta, MetaTrader 5
