@@ -2,6 +2,8 @@
 
 **Timeline:** August 2026 to present
 
+Try the interactive noise test from this project on my [portfolio site](https://stevenghabyous.github.io/#systematic).
+
 Research on EUR/USD trading rules from a six-person graduate team project in NC State's Master of Financial Mathematics program (Fall 2026). This repository documents **my own contributions** to that project: the feature screening, the VWAP analysis, and the Ichimoku TK cross research, which came out of a pre-registered search across 20 trading rules tested against a Monte Carlo noise benchmark.
 
 **Headline finding:** the best rule out of 20 returned +22% out of sample, but it performed *worse* than the best of 20 random strategies would be expected to perform. On EUR/USD at realistic costs, structureless noise turns a profit about half the time, so a profitable backtest on its own proves very little.
@@ -130,3 +132,7 @@ strategy/
 ```
 
 **Tools:** Python, pandas, NumPy, SciPy, ta, MetaTrader 5
+
+---
+
+**Steven Ghabyous** | [Portfolio](https://stevenghabyous.github.io) | [GitHub](https://github.com/stevenghabyous) | [LinkedIn](https://linkedin.com/in/steven-ghabyous) | [Email](mailto:steven.ghabyous2005@gmail.com)
